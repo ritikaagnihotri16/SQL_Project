@@ -1,0 +1,249 @@
+- - - - - - - - - - - - - - - - - Build DataBase - - - Created Table - - - Inserted Data - - - - - - - - - - - - - - - - - - - -
+
+CREATE TABLE IF NOT EXISTS sales(
+   invoice_id VARCHAR(30) NOT NULL PRIMARY KEY,
+   branch VARCHAR(5) NOT NULL,
+   city VARCHAR(30) NOT NULL,
+   customer_type VARCHAR(30) NOT NULL,
+   gender VARCHAR(10) NOT NULL,
+   product_line VARCHAR(100) NOT NULL,
+   unit_price DECIMAL(10,2) NOT NULL,
+   quantity INT NOT NULL,
+   VAT FLOAT(6,4) NOT NULL,
+   total DECIMAL(12,4) NOT NULL,
+   date DATE NOT NULL,
+   time TIME NOT NULL,
+   payment_method VARCHAR(15) NOT NULL,
+   cogs DECIMAL(10,2) NOT NULL,
+   gross_margin_pct FLOAT(11,9),
+   gross_income DECIMAL(12,4) NOT NULL,
+   rating FLOAT(2,1)
+   );
+   
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Feature Enginnering - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  
+  SELECT
+    time,
+    (CASE
+      WHEN `time` BETWEEN '00:00:00' AND  '11:59:00' THEN "Morning"
+      WHEN `time` BETWEEN '12:01:00' AND  '16:00:00' THEN "Afternoon"
+      ELSE "Evening"
+	END
+	) AS time_of_day
+FROM sales;
+
+ALTER TABLE sales ADD COLUMN time_of_day VARCHAR(20);
+
+UPDATE sales
+SET time_of_day = (
+CASE
+      WHEN `time` BETWEEN '00:00:00' AND  '11:59:00' THEN "Morning"
+      WHEN `time` BETWEEN '12:01:00' AND  '16:00:00' THEN "Afternoon"
+      ELSE "Evening"
+	END
+);
+
+SELECT date,
+DAYNAME(date) AS day_name
+FROM sales;
+
+ALTER TABLE sales ADD COLUMN day_name VARCHAR(10);
+
+UPDATE sales
+SET day_name = DAYNAME(date);
+
+SELECT date,
+monthname(date) AS month_name
+FROM sales;
+
+ALTER TABLE sales ADD COLUMN month_name VARCHAR(10);
+
+UPDATE sales 
+SET month_name = MONTHNAME(date);
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Generic Business Questions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SELECT COUNT(DISTINCT city) FROM sales;
+
+SELECT COUNT(DISTINCT branch) FROM sales;
+
+SELECT DISTINCT city,
+branch FROM sales;
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Product Analysis- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+- - How many unique product lines does the data have?
+SELECT DISTINCT product_line
+FROM sales;
+
+ - - What is the most common payment method?
+SELECT payment_method,
+COUNT(payment_method) AS most_common_payment_method
+FROM sales
+GROUP BY payment_method
+ORDER BY COUNT(payment_method) DESC;
+
+- - What is the most selling product line?
+SELECT product_line,
+SUM(quantity) AS product_line_sales
+FROM sales
+GROUP BY product_line
+ORDER BY SUM(quantity) DESC;
+
+- - What is the total revenue by month?
+SELECT month_name,
+SUM(total) AS revenue
+FROM sales
+GROUP BY month_name
+ORDER BY SUM(total) DESC;
+
+- - What month had the highest COGS?
+SELECT month_name,
+SUM(cogs) AS cogs
+FROM sales
+GROUP BY month_name
+ORDER BY SUM(cogs) DESC
+LIMIT 1;
+
+- - What product line had the highest revenue?
+SELECT product_line,
+SUM(total) AS revenue
+FROM sales
+GROUP BY product_line
+ORDER BY SUM(total) DESC;
+
+- - What is the city with the highest revenue?
+SELECT product_line,
+SUM(total) AS revenue
+FROM sales
+GROUP BY product_line
+ORDER BY SUM(total) DESC;
+
+- - What is the city with the highest revenue?
+SELECT city,
+SUM(total) AS revenue
+FROM sales
+GROUP BY city
+ORDER BY SUM(total) DESC;
+
+- - What product line had the highest VAT?
+SELECT product_line,
+AVG(vat) AS vat
+FROM sales
+GROUP BY product_line
+ORDER BY AVG(vat) DESC;
+
+- - Fetch each product line and add a column to those product line showing "Good", "Bad". Good if its greater than average sales
+SELECT 
+product_line,
+ROUND(AVG(total),2) AS avg_sales,
+(CASE
+WHEN AVG(total) > (SELECT AVG(total) FROM sales) THEN "Good"
+ELSE "Bad"
+END)
+AS Remarks
+FROM sales
+GROUP BY product_line;
+
+- - Which branch sold more products than average product sold?
+SELECT
+branch,
+ROUND(AVG(quantity),2) AS Avg_Qut_sold
+FROM sales
+GROUP BY branch
+HAVING AVG(quantity) > (SELECT AVG(quantity) FROM sales);
+
+- - What is the most common product line by gender?
+SELECT product_line,
+gender,
+COUNT(gender) 
+FROM sales
+GROUP BY product_line, gender
+ORDER BY COUNT(gender) DESC;
+
+- - What product line has highest profit?
+SELECT product_line,
+ROUND(SUM(gross_income),2) AS Profit
+FROM sales
+GROUP BY product_line
+ORDER BY profit DESC;
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -Sales Analysis - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+- - What is the average rating of each product line?
+SELECT product_line,
+ROUND(AVG(rating),2) AS Rating
+FROM sales
+GROUP BY product_line;
+
+- - Number of sales made in each time of the day per weekday
+SELECT 
+time_of_day,
+COUNT(*) AS Total_sales
+FROM sales
+WHERE day_name = "Sunday"
+GROUP BY time_of_day
+ORDER BY Total_sales DESC;
+
+- - Which of the customer types brings the most revenue?
+SELECT customer_type,
+ROUND(SUM(total),2) AS Total_revenue
+FROM sales
+GROUP BY customer_type
+ORDER BY Total_revenue DESC;
+
+- - Which city has the largest tax percent/ VAT (Value Added Tax)?
+SELECT city,
+ROUND(AVG(VAT),2) AS VAT
+FROM sales
+GROUP BY city
+ORDER BY VAT DESC;
+
+
+- - Which customer type pays the most in VAT?
+SELECT customer_type,
+ROUND(AVG(VAT),2) AS VAT
+FROM sales
+GROUP BY customer_type
+ORDER BY VAT DESC;
+
+- - - - - - - - - - - - - Customer Analysis 
+
+- - How many unique customer types does the data have?
+SELECT DISTINCT customer_type
+FROM sales;
+
+- - How many unique payment methods does the data have?
+SELECT DISTINCT payment_method
+FROM sales;
+
+- - Which customer type buys the most?
+SELECT customer_type,
+COUNT(*) AS COUNT
+FROM sales
+GROUP BY customer_type
+ORDER BY COUNT DESC;
+
+- - What is the gender of most of the customers?
+SELECT gender,
+COUNT(*) AS COUNT
+FROM sales
+GROUP BY gender
+ORDER BY COUNT DESC;
+
+- - What is the gender distribution per branch?
+SELECT branch,
+gender,
+COUNT(gender)
+FROM sales
+Group BY branch, gender
+ORDER by branch;
+
+- - Which type of customer gives better ratings?
+SELECT customer_type,
+ROUND(AVG(rating),2) AS rating
+FROM sales 
+GROUP BY customer_type
