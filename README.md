@@ -2,7 +2,7 @@
 
 ## ABOUT
 
-Objective of this project is to explore the Walmart Sales data to understand top performing branches and products, sales trend of different products, customer behaviour. Aim is to draw insights from exploratory data analysis with SQL. The dataset was obtained from the Kaggle.
+Objective of this project is to explore the Walmart Sales data to understand top performing branches and product lines, sales trend of different products, customer behavior. Aim is to draw insights from exploratory data analysis with SQL. The dataset was obtained from the Kaggle.
 
 ## PURPOSE
 Purpose of this project is to draw insights from exploratory data analysis with SQL.
